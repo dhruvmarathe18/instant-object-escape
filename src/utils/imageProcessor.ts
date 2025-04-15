@@ -1,3 +1,4 @@
+
 import { pipeline, env } from '@huggingface/transformers';
 
 // Configure transformers.js to always download models
@@ -37,8 +38,17 @@ export const removeBackground = async (
 ): Promise<Blob> => {
   try {
     console.log('Starting background removal process...');
+    // Try WebGPU first, fall back to WASM if not supported
+    let device = 'webgpu';
+    
+    // Check if WebGPU is supported
+    if (!navigator.gpu) {
+      console.log('WebGPU not supported, falling back to WASM');
+      device = 'wasm';
+    }
+    
     const segmenter = await pipeline('image-segmentation', 'Xenova/segformer-b0-finetuned-ade-512-512', {
-      device: 'cpu',
+      device: device as 'webgpu' | 'wasm',
     });
     
     // Convert HTMLImageElement to canvas
